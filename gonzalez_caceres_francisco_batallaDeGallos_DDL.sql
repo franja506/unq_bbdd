@@ -27,6 +27,9 @@ SELECT t.nombre, avg(duracion_en_segundos) AS duracion
  GROUP BY t.nombre;
 
 /*5. Obtener los competidores registrados pero que aún no hayan competido.*/
+SELECT *
+  FROM competidor c
+ WHERE c.id NOT IN (SELECT DISTINCT competidor_id FROM rima);
 
 /*6. Obtener la mejor rima de cada competidor que no sea del mismo lugar en donde se realizó la competición,
 ordenadas por valoración.*/
