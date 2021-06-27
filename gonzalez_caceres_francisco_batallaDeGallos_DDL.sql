@@ -18,7 +18,7 @@ HAVING count(distinct competicion_id) = 1;
 
 /*4. Obtener el nombre y el promedio de duración de las temáticas utilizadas en las competiciones realizadas
 en los predios llamados Colonial de Buenos Aires y de Córdoba.*/
-SELECT t.nombre, avg(duracion_en_segundos) AS duracion
+SELECT t.nombre, avg(duracion_en_segundos) AS promedio_duracion
   FROM competicion c
   JOIN tematica_en_competicion tec on c.id = tec.competicion_id
   JOIN tematica t on tec.tematica_id = t.id
@@ -35,13 +35,30 @@ SELECT *
 ordenadas por valoración.*/
 
 /*7. Obtener la temática en competición de las rimas cuyos promedio en competición no superen el valor 6.4 .*/
+SELECT t.*--r.competicion_id, r.tematica_id, avg(r.valoracion)
+  FROM rima r
+  JOIN tematica t on r.tematica_id = t.id
+ GROUP BY t.id, r.competicion_id, r.tematica_id
+HAVING avg(r.valoracion) <= 6.4;
 
 /*8. Obtener el autor del beat, el nombre del beat y el nombre de la competicion de aquellas competiciones en
 donde el competidor no haya hecho rimas con valoración menor a 2.*/
+SELECT tec.beat_autor, beat_nombre, comp.nombre AS nombre_competicion
+  FROM tematica_en_competicion tec
+NATURAL JOIN (SELECT c.sobrenombre AS beat_autor, r.competicion_id, r.tematica_id
+                FROM rima r
+                JOIN competidor c on c.id = r.competidor_id
+               GROUP BY c.sobrenombre, r.competicion_id, r.tematica_id
+              HAVING min(valoracion) > 2) AS autor_en_competicion
+  JOIN competicion comp on tec.competicion_id = comp.id;
 
 /*9. Obtener una lista que muestre la cantidad de plazas por zona, ordenados descendentemente por la cantidad
 pero ascendentemente por provincia y ciudad. Una zona se define por su ciudad y provincia. Se debe
 visualizar la zona en el resultado.*/
+SELECT count(*), (ciudad, provincia) AS zona
+  FROM plaza
+ GROUP BY (ciudad, provincia)
+ ORDER BY count(*) desc, (provincia, ciudad) asc;
 
 /*10. Obtener una lista que muestre la cantidad de competidores por zona, ordenados descendentemente por
 la cantidad y zona. Se debe contar a los competidores que hicieron al menos una rima. Se debe visualizar
