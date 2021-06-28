@@ -47,7 +47,7 @@ SELECT tec.beat_autor, beat_nombre, comp.nombre AS nombre_competicion
   FROM tematica_en_competicion tec
 NATURAL JOIN (SELECT c.sobrenombre AS beat_autor, r.competicion_id, r.tematica_id
                 FROM rima r
-                JOIN competidor c on c.id = r.competidor_id
+                JOIN competidor c ON c.id = r.competidor_id
                GROUP BY c.sobrenombre, r.competicion_id, r.tematica_id
               HAVING min(valoracion) > 2) AS autor_en_competicion
   JOIN competicion comp on tec.competicion_id = comp.id;
@@ -55,7 +55,7 @@ NATURAL JOIN (SELECT c.sobrenombre AS beat_autor, r.competicion_id, r.tematica_i
 /*9. Obtener una lista que muestre la cantidad de plazas por zona, ordenados descendentemente por la cantidad
 pero ascendentemente por provincia y ciudad. Una zona se define por su ciudad y provincia. Se debe
 visualizar la zona en el resultado.*/
-SELECT count(*), (ciudad, provincia) AS zona
+SELECT count(*) AS cant_plazas, (ciudad, provincia) AS zona
   FROM plaza
  GROUP BY (ciudad, provincia)
  ORDER BY count(*) desc, (provincia, ciudad) asc;
@@ -80,9 +80,20 @@ SELECT p.nombre AS plaza, avg(r.valoracion) AS promedio_valoracion, max(r.valora
 
 /*12. Obtener de las últimas 10 rimas registradas, el sobrenombre del competidor, la valoración de la rima, el
 nombre del beat, el nombre del autor del beat y el nombre de la plaza del competidor.*/
+SELECT c.sobrenombre AS sobrenombre_competidor, r.valoracion AS valoracion_rima, tec.beat_nombre AS beat_nombre, tec.beat_autor AS beat_autor, p.nombre AS nombre_plaza
+  FROM rima r
+  JOIN tematica_en_competicion tec ON r.competicion_id = tec.competicion_id AND r.tematica_id = tec.tematica_id
+  JOIN competidor c ON c.id = r.competidor_id
+  JOIN plaza p ON p.id = c.plaza_id
+ ORDER BY r.fecha_registro DESC
+ LIMIT 10;
 
 /*13. En la tabla de competidor conocemos su PK, pero es necesario impedir que pueda repetirse el sobrenombre
 entre distintos competidores. Explique cómo lo haría e impleméntelo.*/
+--Aplicaría una restriccion para que el atributo sobrenombre sea unico. Este punto debería estar en el archivo
+--de DML pero para un mejor orden lo dejo acá.
+ALTER TABLE competidor
+  ADD CONSTRAINT sobrenombre_unique UNIQUE (sobrenombre);
 
 /*14. Cree una vista(view) de los competidores cuyo promedio histórico de rimas en competiciones de Buenos
 Aires es mayor a 7, participaron en más de 3 competencias, tienen al menos 4 rimas con puntaje
