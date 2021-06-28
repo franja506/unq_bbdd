@@ -20,10 +20,10 @@ HAVING count(distinct competicion_id) = 1;
 en los predios llamados Colonial de Buenos Aires y de Córdoba.*/
 SELECT t.nombre, avg(duracion_en_segundos) AS promedio_duracion
   FROM competicion c
-  JOIN tematica_en_competicion tec on c.id = tec.competicion_id
-  JOIN tematica t on tec.tematica_id = t.id
+  JOIN tematica_en_competicion tec ON c.id = tec.competicion_id
+  JOIN tematica t ON tec.tematica_id = t.id
  WHERE c.predio = 'Colonial'
-   AND c.provincia in ('Cordoba','Buenos Aires')
+   AND c.provincia IN ('Cordoba','Buenos Aires')
  GROUP BY t.nombre;
 
 /*5. Obtener los competidores registrados pero que aún no hayan competido.*/
@@ -63,6 +63,7 @@ SELECT count(*), (ciudad, provincia) AS zona
 /*10. Obtener una lista que muestre la cantidad de competidores por zona, ordenados descendentemente por
 la cantidad y zona. Se debe contar a los competidores que hicieron al menos una rima. Se debe visualizar
 la zona en el resultado.*/
+
 
 /*11. Obtener un listado que muestre, de cada plaza, el promedio de valoración de las rimas, la máxima valoración
 y la mínima de los competidores de esa plaza.*/
