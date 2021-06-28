@@ -72,6 +72,11 @@ SELECT count(*) AS cant_competidores, (p.ciudad, p.provincia) AS zona
 
 /*11. Obtener un listado que muestre, de cada plaza, el promedio de valoración de las rimas, la máxima valoración
 y la mínima de los competidores de esa plaza.*/
+SELECT p.nombre AS plaza, avg(r.valoracion) AS promedio_valoracion, max(r.valoracion) AS maxima_valorarion, min(r.valoracion) AS minima_valoracion
+  FROM rima r
+  JOIN competidor c ON c.id = r.competidor_id
+  JOIN plaza p ON p.id = c.plaza_id
+ GROUP BY p.id;
 
 /*12. Obtener de las últimas 10 rimas registradas, el sobrenombre del competidor, la valoración de la rima, el
 nombre del beat, el nombre del autor del beat y el nombre de la plaza del competidor.*/
