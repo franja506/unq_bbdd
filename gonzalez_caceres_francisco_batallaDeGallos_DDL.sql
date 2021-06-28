@@ -1,161 +1,120 @@
-/*1. Obtener el sobrenombre, id y el nombre de la plaza, de los competidores de plazas de la ciudad de Quilmes
-en Buenos Aires.*/
-SELECT c.sobrenombre, c.id, p.nombre
-  FROM competidor c
-  JOIN plaza p ON p.id = c.plaza_id
- WHERE p.ciudad = 'Quilmes'
-   AND p.provincia = 'Buenos Aires';
-
-/*2. Obtener el sobrenombre y el nombre de su plaza de los competidores que solo asistieron a una competencia.*/
-SELECT sobrenombre, p.nombre AS nombre_plaza
-  FROM competidor c
-  JOIN rima r ON r.competidor_id = c.id
-  JOIN plaza p on c.plaza_id = p.id
- GROUP BY sobrenombre, p.nombre
-HAVING count(distinct competicion_id) = 1;
-
-/*3. Obtener las competiciones donde todas sus temáticas duran más de 2 minutos.*/
-SELECT c.nombre AS competicion
-  FROM competicion c
-  JOIN tematica_en_competicion tec ON c.id = tec.competicion_id
-  JOIN tematica t ON t.id = tec.tematica_id
- GROUP BY c.id, tec.beat_autor, tec.beat_nombre, t.id
-HAVING min(t.duracion_en_segundos) > 120;
-
-/*4. Obtener el nombre y el promedio de duración de las temáticas utilizadas en las competiciones realizadas
-en los predios llamados Colonial de Buenos Aires y de Córdoba.*/
-SELECT t.nombre, avg(duracion_en_segundos) AS promedio_duracion
-  FROM competicion c
-  JOIN tematica_en_competicion tec ON c.id = tec.competicion_id
-  JOIN tematica t ON tec.tematica_id = t.id
- WHERE c.predio = 'Colonial'
-   AND c.provincia IN ('Cordoba','Buenos Aires')
- GROUP BY t.nombre;
-
-/*5. Obtener los competidores registrados pero que aún no hayan competido.*/
---Asumo que me piden toda la informacion del competidor
-SELECT *
-  FROM competidor c
- WHERE c.id NOT IN (SELECT DISTINCT competidor_id FROM rima);
-
-/*6. Obtener la mejor rima de cada competidor que no sea del mismo lugar en donde se realizó la competición,
-ordenadas por valoración.*/
-SELECT c.sobrenombre, max(r.valoracion) AS mejor_rima
-  FROM rima r
-  JOIN competidor c ON c.id = r.competidor_id
- GROUP BY r.competidor_id, c.sobrenombre
- ORDER BY MAX(r.valoracion);
-
-/*7. Obtener la temática en competición de las rimas cuyos promedio en competición no superen el valor 6.4 .*/
-SELECT t.*--r.competicion_id, r.tematica_id, avg(r.valoracion)
-  FROM rima r
-  JOIN tematica t ON r.tematica_id = t.id
- GROUP BY t.id, r.competicion_id, r.tematica_id
-HAVING avg(r.valoracion) <= 6.4;
-
-/*8. Obtener el autor del beat, el nombre del beat y el nombre de la competicion de aquellas competiciones en
-donde el competidor no haya hecho rimas con valoración menor a 2.*/
-SELECT tec.beat_autor, beat_nombre, comp.nombre AS nombre_competicion
-  FROM tematica_en_competicion tec
-NATURAL JOIN (SELECT c.sobrenombre AS beat_autor, r.competicion_id, r.tematica_id
-                FROM rima r
-                JOIN competidor c ON c.id = r.competidor_id
-               GROUP BY c.sobrenombre, r.competicion_id, r.tematica_id
-              HAVING min(valoracion) > 2) AS autor_en_competicion
-  JOIN competicion comp on tec.competicion_id = comp.id;
-
-/*9. Obtener una lista que muestre la cantidad de plazas por zona, ordenados descendentemente por la cantidad
-pero ascendentemente por provincia y ciudad. Una zona se define por su ciudad y provincia. Se debe
-visualizar la zona en el resultado.*/
-SELECT count(*) AS cant_plazas, (ciudad, provincia) AS zona
-  FROM plaza
- GROUP BY (ciudad, provincia)
- ORDER BY count(*) desc, (provincia, ciudad) asc;
-
-/*10. Obtener una lista que muestre la cantidad de competidores por zona, ordenados descendentemente por
-la cantidad y zona. Se debe contar a los competidores que hicieron al menos una rima. Se debe visualizar
-la zona en el resultado.*/
-SELECT count(*) AS cant_competidores, (p.ciudad, p.provincia) AS zona
-  FROM competidor c
-  JOIN plaza p ON c.plaza_id = p.id
- WHERE c.id IN (SELECT DISTINCT competidor_id  FROM rima)
- GROUP BY (p.ciudad, p.provincia);
+/*(a) Genere una base de datos en el motor PostgreSQL cuyo nombre sea tp_su_apellido. No desapruebe
+por literalidad. Describa los pasos que tuvo que llevar a cabo para lograrlo. Guarde las sentencias
+que usó para la creación de las tablas en el archivo sql.*/
+--Yo lo hice a traves de un ide. Los pasos que seguí son los siguientes:
+--Nos conectamos a la base a traves del usuario postgresql y la clave que generamos al instalar el motor,
+--y lo apuntamos al localhost con el puerto por defecto que viene asignado(5432). Abrimos una consola y ejecutamos
+--el siguiente script
+CREATE DATABASE tp_gonzalez_caceres;
+--Esto crea una base de datos a partir de la cual crearemos todos los objetos que necesitemos para la realizacion del TP
+--Puede crearse un shema para encapsular el dominio del TP, pero por fines practicos no lo hice.
+--El siguiente script se podría utilizar para tal fin -> CREATE SHEMA batalla_de_gallos;
 
 
-/*11. Obtener un listado que muestre, de cada plaza, el promedio de valoración de las rimas, la máxima valoración
-y la mínima de los competidores de esa plaza.*/
-SELECT p.nombre AS plaza, avg(r.valoracion) AS promedio_valoracion, max(r.valoracion) AS maxima_valorarion, min(r.valoracion) AS minima_valoracion
-  FROM rima r
-  JOIN competidor c ON c.id = r.competidor_id
-  JOIN plaza p ON p.id = c.plaza_id
- GROUP BY p.id;
+/*(b) Escriba las queries para crear las tablas y estructuras de acuerdo a lo descripto más arriba. El puntaje de
+las rimas por defecto debe ser 2 y la duración de la temática debe ser por default de 30 segundos.
+(c) Identifique todas las claves foráneas que correspondan y escriba las queries para crearlas.
+(d) Ejecute las queries de modo tal que todas estas estructuras sean creadas en la base de datos creada en el
+punto a.*/
+CREATE TABLE plaza (
+    id serial PRIMARY KEY,
+    nombre varchar(30) NOT NULL,
+    ciudad varchar(50) NOT NULL,
+    provincia varchar(50) NOT NULL
+);
 
-/*12. Obtener de las últimas 10 rimas registradas, el sobrenombre del competidor, la valoración de la rima, el
-nombre del beat, el nombre del autor del beat y el nombre de la plaza del competidor.*/
-SELECT c.sobrenombre AS sobrenombre_competidor, r.valoracion AS valoracion_rima, tec.beat_nombre AS beat_nombre, tec.beat_autor AS beat_autor, p.nombre AS nombre_plaza
-  FROM rima r
-  JOIN tematica_en_competicion tec ON r.competicion_id = tec.competicion_id AND r.tematica_id = tec.tematica_id
-  JOIN competidor c ON c.id = r.competidor_id
-  JOIN plaza p ON p.id = c.plaza_id
- ORDER BY r.fecha_registro DESC
- LIMIT 10;
+CREATE TABLE competicion (
+    id serial PRIMARY KEY,
+    nombre varchar(50) NOT NULL,
+    fecha timestamp NOT NULL,
+    hora integer NOT NULL,
+    ciudad varchar(50) NOT NULL,
+    predio varchar(50) NOT NULL,
+    provincia varchar(30) NOT NULL
+);
 
-/*13. En la tabla de competidor conocemos su PK, pero es necesario impedir que pueda repetirse el sobrenombre
-entre distintos competidores. Explique cómo lo haría e impleméntelo.*/
---Aplicaría una restriccion para que el atributo sobrenombre sea unico. Este punto debería estar en el archivo
---de DML pero para un mejor orden lo dejo acá.
-ALTER TABLE competidor
-  ADD CONSTRAINT sobrenombre_unique UNIQUE (sobrenombre);
+CREATE TABLE competidor (
+    id serial PRIMARY KEY,
+    sobrenombre varchar(30) NOT NULL,
+    especialidad varchar(20) NOT NULL,
+    es_mayor boolean NOT NULL,
+    plaza_id integer NOT NULL,
 
-/*14. Cree una vista(view) de los competidores cuyo promedio histórico de rimas en competiciones de Buenos
-Aires es mayor a 7, participaron en más de 3 competencias, tienen al menos 4 rimas con puntaje
-perfecto(10) y compitieron antes del 2015 o después del 2020.*/
-CREATE VIEW competidor_view AS
-    SELECT c1.*
-      FROM competidor c1
-      JOIN rima r1 ON r1.competidor_id = c1.id
-      JOIN competicion on r1.competicion_id = competicion.id
-     WHERE competicion.provincia = 'Buenos Aires'
-     GROUP BY c1.id
-    HAVING AVG(r1.valoracion) > 7
-INTERSECT
-    SELECT c2.*
-      FROM competidor c2
-      JOIN rima r2 ON r2.competidor_id = c2.id
-     GROUP BY c2.id
-    HAVING count(distinct r2.competicion_id) > 3
-INTERSECT
-    SELECT c3.*
-      FROM competidor c3
-      JOIN rima r3 ON r3.competidor_id = c3.id
-     WHERE r3.valoracion = 10
-     GROUP BY c3.id
-    HAVING count(*) >= 4
-INTERSECT
-SELECT c4.*
-  FROM competidor c4
-  JOIN rima r4 ON r4.competidor_id = c4.id
- WHERE EXTRACT(YEAR FROM r4.fecha_registro) < 2015
-    OR EXTRACT(YEAR FROM r4.fecha_registro) > 2020;
+    CONSTRAINT fk_plaza
+      FOREIGN KEY(plaza_id) 
+	    REFERENCES plaza(id)
+);
 
-/*15. Cree un índice de las competiciones por nombre y fecha para mejorar la velocidad de las consultas.*/
---Este punto debería estar en el archivo de DML pero para un mejor orden lo dejo acá.
-CREATE INDEX idx_competicion_nombre_fecha on competicion(nombre,fecha);
+CREATE TABLE tematica (
+    id serial PRIMARY KEY,
+    duracion_en_segundos integer DEFAULT 30,
+    nombre varchar(50) NOT NULL,
+    descripcion varchar(255) NOT NULL
+);
 
-/*16. Obtener los nombres de los beats y su autor en donde el sobrenombre de un competidor que haya hecho
-rimas en ese beat y el nombre del autor del beat sean el mismo.*/
-SELECT distinct tec.beat_nombre, tec.beat_autor
-  FROM rima r
-  JOIN tematica_en_competicion tec ON r.competicion_id = tec.competicion_id AND r.tematica_id = tec.tematica_id
-  JOIN competidor c ON c.id = r.competidor_id
- WHERE tec.beat_autor = c.sobrenombre;
+CREATE TABLE tematica_en_competicion (
+    beat_autor varchar(50) NOT NULL,
+    beat_nombre varchar(50) NOT NULL,
+    competicion_id integer NOT NULL,
+    tematica_id integer NOT NULL,
 
-/*17. Obtener la competición y el competidor campeón de la misma. Un competidor es campeón al ser el que
-más puntos obtuvo en una competición.*/
-SELECT c.nombre AS competicion, comp.sobrenombre AS campeon
-  FROM (SELECT competidor_id, competicion_id, rank() OVER (PARTITION BY competicion_id ORDER BY SUM(r.valoracion) DESC) AS rank
-          FROM rima r
-         GROUP BY r.competidor_id, r.competicion_id) AS rima_agrupada
-  JOIN competicion c ON c.id = rima_agrupada.competicion_id
-  JOIN competidor comp ON comp.id = rima_agrupada.competidor_id
- WHERE rima_agrupada.rank = 1;
+    PRIMARY KEY (beat_autor, beat_nombre),
+    CONSTRAINT fk_competicion
+        FOREIGN KEY(competicion_id)
+            REFERENCES competicion(id),
+    CONSTRAINT fk_tematica
+        FOREIGN KEY(tematica_id)
+            REFERENCES tematica(id)
+);
+
+CREATE TABLE rima (
+    valoracion int DEFAULT 2,
+    patron integer,
+    competidor_id integer NOT NULL,
+    competicion_id integer NOT NULL,
+    tematica_id integer NOT NULL,
+
+    PRIMARY KEY (patron, competidor_id, competicion_id, tematica_id),
+    CONSTRAINT fk_competidor
+        FOREIGN KEY(competidor_id)
+            REFERENCES competidor(id),
+    CONSTRAINT fk_competicion
+        FOREIGN KEY(competicion_id)
+            REFERENCES competicion(id),
+    CONSTRAINT fk_tematica
+        FOREIGN KEY(tematica_id)
+            REFERENCES tematica(id)
+);
+
+/*(e) Inserte en la base los datos brindados en el archivo datos_batalla_de_gallos.sql. Describa los
+pasos que tuvo que llevar a cabo para lograrlo, qué metodo usó.*/
+
+--Yo realice una ejecución del archivo a traves del IDE, pero se podría hacer con siguiente comando:
+--psql "nombre de la base" <"path adsoluto del archivo" -U "nombre usuario".
+--Como el archivo de insercion poseia atributos no descriptos en el modelo se tuvo que hacer una alter
+--table para poder insertar los mismos.
+ALTER TABLE rima ADD COLUMN fecha_registro date;
+
+/*(f) Limite el atributo patron a un maximo de 4 y el atributo valoracion a un maximo de 10 en la tabla
+rima.*/
+ALTER TABLE rima ADD CONSTRAINT patron_valoracion_check
+    CHECK (patron <= 4 AND valoracion <= 10);
+
+/*(g) Realice la inserción de datos de forma tal que exista una rima de la temática 4x4 en una competición
+hecha en el predio del Luna Park por un competidor de sobrenombre Wolf oriundo de una plaza de
+Bernal, y que dicha rima esté valorada con 7. Dichas queries deben estar en el entregable.*/
+--Estas queries deberian estar en el archivo de DML pero para mantener un orden las dejo acá
+DO $$
+BEGIN
+    INSERT INTO tematica(id, nombre, descripcion)
+    VALUES (8,'4x4','Todo terreno');
+
+    INSERT INTO plaza (id, nombre, ciudad, provincia)
+    VALUES (12,'Del Maestro', 'Bernal', 'Buenos Aires');
+
+    INSERT INTO competidor(id, sobrenombre, plaza_id,especialidad, es_mayor)
+    VALUES (25,'Wolf', 12, 'Rapear con Querys', false);
+
+    INSERT INTO rima (valoracion, patron, competidor_id, competicion_id, tematica_id, fecha_registro)
+    VALUES (7,1,25,1,8,'2021-03-01');
+END$$;
