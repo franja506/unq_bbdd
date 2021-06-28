@@ -7,7 +7,7 @@ SELECT c.sobrenombre, c.id, p.nombre
    AND p.provincia = 'Buenos Aires';
 
 /*2. Obtener el sobrenombre y el nombre de su plaza de los competidores que solo asistieron a una competencia.*/
-SELECT sobrenombre, p.nombre
+SELECT sobrenombre, p.nombre AS nombre_plaza
   FROM competidor c
   JOIN rima r ON r.competidor_id = c.id
   JOIN plaza p on c.plaza_id = p.id
@@ -100,6 +100,8 @@ Aires es mayor a 7, participaron en más de 3 competencias, tienen al menos 4 ri
 perfecto(10) y compitieron antes del 2015 o después del 2020.*/
 
 /*15. Cree un índice de las competiciones por nombre y fecha para mejorar la velocidad de las consultas.*/
+--Este punto debería estar en el archivo de DML pero para un mejor orden lo dejo acá.
+CREATE INDEX idx_competicion_nombre_fecha on competicion(nombre,fecha);
 
 /*16. Obtener los nombres de los beats y su autor en donde el sobrenombre de un competidor que haya hecho
 rimas en ese beat y el nombre del autor del beat sean el mismo.*/
