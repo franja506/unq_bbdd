@@ -33,6 +33,7 @@ SELECT t.nombre, avg(duracion_en_segundos) AS promedio_duracion
  GROUP BY t.nombre;
 
 /*5. Obtener los competidores registrados pero que aún no hayan competido.*/
+--Asumo que me piden toda la informacion del competidor
 SELECT *
   FROM competidor c
  WHERE c.id NOT IN (SELECT DISTINCT competidor_id FROM rima);
