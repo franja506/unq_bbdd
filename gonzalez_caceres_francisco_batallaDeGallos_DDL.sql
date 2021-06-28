@@ -63,6 +63,11 @@ SELECT count(*), (ciudad, provincia) AS zona
 /*10. Obtener una lista que muestre la cantidad de competidores por zona, ordenados descendentemente por
 la cantidad y zona. Se debe contar a los competidores que hicieron al menos una rima. Se debe visualizar
 la zona en el resultado.*/
+SELECT count(*) AS cant_competidores, (p.ciudad, p.provincia) AS zona
+  FROM competidor c
+  JOIN plaza p ON c.plaza_id = p.id
+ WHERE c.id IN (SELECT DISTINCT competidor_id  FROM rima)
+ GROUP BY (p.ciudad, p.provincia);
 
 
 /*11. Obtener un listado que muestre, de cada plaza, el promedio de valoración de las rimas, la máxima valoración
