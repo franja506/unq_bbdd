@@ -40,6 +40,11 @@ SELECT *
 
 /*6. Obtener la mejor rima de cada competidor que no sea del mismo lugar en donde se realizó la competición,
 ordenadas por valoración.*/
+SELECT c.sobrenombre, max(r.valoracion) AS mejor_rima
+  FROM rima r
+  JOIN competidor c ON c.id = r.competidor_id
+ GROUP BY r.competidor_id, c.sobrenombre
+ ORDER BY MAX(r.valoracion);
 
 /*7. Obtener la temática en competición de las rimas cuyos promedio en competición no superen el valor 6.4 .*/
 SELECT t.*--r.competicion_id, r.tematica_id, avg(r.valoracion)
