@@ -113,3 +113,10 @@ SELECT distinct tec.beat_nombre, tec.beat_autor
 
 /*17. Obtener la competición y el competidor campeón de la misma. Un competidor es campeón al ser el que
 más puntos obtuvo en una competición.*/
+SELECT c.nombre AS competicion, comp.sobrenombre AS campeon
+  FROM (SELECT competidor_id, competicion_id, rank() OVER (PARTITION BY competicion_id ORDER BY SUM(r.valoracion) DESC) AS rank
+          FROM rima r
+         GROUP BY r.competidor_id, r.competicion_id) AS rima_agrupada
+  JOIN competicion c ON c.id = rima_agrupada.competicion_id
+  JOIN competidor comp ON comp.id = rima_agrupada.competidor_id
+ WHERE rima_agrupada.rank = 1;
