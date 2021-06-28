@@ -49,7 +49,7 @@ SELECT c.sobrenombre, max(r.valoracion) AS mejor_rima
 /*7. Obtener la temática en competición de las rimas cuyos promedio en competición no superen el valor 6.4 .*/
 SELECT t.*--r.competicion_id, r.tematica_id, avg(r.valoracion)
   FROM rima r
-  JOIN tematica t on r.tematica_id = t.id
+  JOIN tematica t ON r.tematica_id = t.id
  GROUP BY t.id, r.competicion_id, r.tematica_id
 HAVING avg(r.valoracion) <= 6.4;
 
@@ -110,6 +110,33 @@ ALTER TABLE competidor
 /*14. Cree una vista(view) de los competidores cuyo promedio histórico de rimas en competiciones de Buenos
 Aires es mayor a 7, participaron en más de 3 competencias, tienen al menos 4 rimas con puntaje
 perfecto(10) y compitieron antes del 2015 o después del 2020.*/
+CREATE VIEW competidor_view AS
+    SELECT c1.*
+      FROM competidor c1
+      JOIN rima r1 ON r1.competidor_id = c1.id
+      JOIN competicion on r1.competicion_id = competicion.id
+     WHERE competicion.provincia = 'Buenos Aires'
+     GROUP BY c1.id
+    HAVING AVG(r1.valoracion) > 7
+INTERSECT
+    SELECT c2.*
+      FROM competidor c2
+      JOIN rima r2 ON r2.competidor_id = c2.id
+     GROUP BY c2.id
+    HAVING count(distinct r2.competicion_id) > 3
+INTERSECT
+    SELECT c3.*
+      FROM competidor c3
+      JOIN rima r3 ON r3.competidor_id = c3.id
+     WHERE r3.valoracion = 10
+     GROUP BY c3.id
+    HAVING count(*) >= 4
+INTERSECT
+SELECT c4.*
+  FROM competidor c4
+  JOIN rima r4 ON r4.competidor_id = c4.id
+ WHERE EXTRACT(YEAR FROM r4.fecha_registro) < 2015
+    OR EXTRACT(YEAR FROM r4.fecha_registro) > 2020;
 
 /*15. Cree un índice de las competiciones por nombre y fecha para mejorar la velocidad de las consultas.*/
 --Este punto debería estar en el archivo de DML pero para un mejor orden lo dejo acá.
