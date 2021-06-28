@@ -105,6 +105,11 @@ CREATE INDEX idx_competicion_nombre_fecha on competicion(nombre,fecha);
 
 /*16. Obtener los nombres de los beats y su autor en donde el sobrenombre de un competidor que haya hecho
 rimas en ese beat y el nombre del autor del beat sean el mismo.*/
+SELECT distinct tec.beat_nombre, tec.beat_autor
+  FROM rima r
+  JOIN tematica_en_competicion tec ON r.competicion_id = tec.competicion_id AND r.tematica_id = tec.tematica_id
+  JOIN competidor c ON c.id = r.competidor_id
+ WHERE tec.beat_autor = c.sobrenombre;
 
 /*17. Obtener la competición y el competidor campeón de la misma. Un competidor es campeón al ser el que
 más puntos obtuvo en una competición.*/
