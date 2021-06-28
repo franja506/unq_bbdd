@@ -15,6 +15,12 @@ SELECT sobrenombre, p.nombre AS nombre_plaza
 HAVING count(distinct competicion_id) = 1;
 
 /*3. Obtener las competiciones donde todas sus temáticas duran más de 2 minutos.*/
+SELECT c.nombre AS competicion
+  FROM competicion c
+  JOIN tematica_en_competicion tec ON c.id = tec.competicion_id
+  JOIN tematica t ON t.id = tec.tematica_id
+ GROUP BY c.id, tec.beat_autor, tec.beat_nombre, t.id
+HAVING min(t.duracion_en_segundos) > 120;
 
 /*4. Obtener el nombre y el promedio de duración de las temáticas utilizadas en las competiciones realizadas
 en los predios llamados Colonial de Buenos Aires y de Córdoba.*/
